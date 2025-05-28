@@ -1,0 +1,60 @@
+#include <QTRSensors.h>
+#include "variable.h"
+
+QTRSensors sigueLineas;
+
+const int freq = 5000; 
+const int resolution = 8;             
+
+const uint8_t SensorCount = 8; 
+uint16_t sensorValues[SensorCount];
+int up = 3500;
+
+void setup() {
+motorSetup();
+
+pinMode(LED, OUTPUT);
+sigueLineas.setTypeAnalog();
+sigueLineas.setSensorPins((const uint8_t[] )
+                           {36,39,34,35,32,33,25,26},SensorCount);
+sigueLineas.setEmitterPin(27);
+Serial.begin(115200);
+Serial.println("Calibrando sensores..");
+digitalWrite(LED, HIGH);
+for (int i = 0; i< 200; i++){
+  sigueLineas.calibrate();
+  delay(10);
+}
+digitalWrite(LED, LOW);
+
+Serial.println("Calibracion completada");
+
+while(digitalRead(BOTON)==0){
+  delay(10);
+}
+delay(1000);
+}
+
+void loop() {
+sigueLineas.read(sensorValues);
+
+if (sensorValues[1] < up && sensorValues[2] < up && sensorValues[3] > up && sensorValues[4] > up && sensorValues[5] < up && sensorValues[6] < up){
+  motores(70,70); //70 y 70
+}
+else if(sensorValues[1] > up && sensorValues[2] > up && sensorValues[3] < up && sensorValues[4] < up && sensorValues[5] < up && sensorValues[6] < up){
+  motores(10,70);//10 y 70
+  delay(500);
+}
+else if(sensorValues[1] < up && sensorValues[2] < up && sensorValues[3] < up && sensorValues[4] < up && sensorValues[5] > up && sensorValues[6] > up){
+    motores(70,10);//70 y 10
+  delay(500);
+}
+
+for (int i = 0; i< SensorCount; i++){
+ Serial.print(sensorValues[i]);
+ Serial.print ('\t');
+}
+Serial.println();
+
+delay(300);
+}
